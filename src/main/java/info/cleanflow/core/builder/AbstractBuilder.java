@@ -1,11 +1,8 @@
 package info.cleanflow.core.builder;
 
+import info.cleanflow.core.Flow;
 import org.slf4j.Logger;
 
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeParseException;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -14,10 +11,10 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 /**
  * Monadic entity builder
+ * @param <S> incoming traveler type
  * @param <E> entity type
- * @param <T> incoming traveler type
  */
-public abstract class AbstractBuilder<E, T> {
+public abstract class AbstractBuilder<S, E> {
 
     private static final Logger LOG = getLogger(AbstractBuilder.class);
 
@@ -27,26 +24,28 @@ public abstract class AbstractBuilder<E, T> {
 
     private Supplier<E> entitySupplier;
 
-    private T source;
+    private S source;
 
     private String prefix;
 
-    public AbstractBuilder<E, T> putEntitySupplier(Supplier<E> entitySupplier) {
+    private int rejections;
+
+    public AbstractBuilder<S, E> putEntitySupplier(Supplier<E> entitySupplier) {
         this.entitySupplier = requireNonNull(entitySupplier, "The entity supplier is mandatory");
         return this;
     }
 
-    public AbstractBuilder<E, T> putRejectionConsumer(Consumer<Rejection> rejectionConsumer) {
+    public AbstractBuilder<S, E> putRejectionConsumer(Consumer<Rejection> rejectionConsumer) {
         this.rejectionConsumer = rejectionConsumer;
         return this;
     }
 
-    public AbstractBuilder<E, T> putSource(T source) {
+    public AbstractBuilder<S, E> putSource(S source) {
         this.source = source;
         return this;
     }
 
-    public AbstractBuilder<E, T> putPrefix(String prefix) {
+    public AbstractBuilder<S, E> putPrefix(String prefix) {
         if(prefix.isBlank()) {
             LOG.warn("Not assigned prefix");
             return this;
@@ -61,8 +60,10 @@ public abstract class AbstractBuilder<E, T> {
         check();
         requireNonNull(entityConsumer, "The entity consumer is a mandatory parameter for build");
         entity = entitySupplier.get();
-        assemble(entity, source);
-        entityConsumer.accept(entity);
+        assemble(source, entity);
+        if(rejections == 0) {
+            entityConsumer.accept(entity);
+        }
     }
 
     protected void check() {
@@ -75,7 +76,11 @@ public abstract class AbstractBuilder<E, T> {
      * @param entity A not null entity
      * @param source A not null contract source
      */
-    protected abstract void assemble(E entity, T source);
+    protected abstract void assemble(S source, E entity);
+
+    protected <V> Consumer<V> put(final String fieldName, final Consumer<V> setter) {
+        return x -> put(fieldName, x, setter);
+    }
 
     protected <V> void put(final String fieldName, final V value, final Consumer<V> setter) {
         requireNonNull(fieldName, "Field name parameter is mandatory");
@@ -107,6 +112,7 @@ public abstract class AbstractBuilder<E, T> {
 
     protected void sendRejection(Rejection rejection) {
         requireNonNull(rejection, "Parameter rejection is mandatory");
+        rejections++;
         if(rejectionConsumer == null) {
             LOG.error("Not published rejection: {}", rejection);
             return;
@@ -114,34 +120,21 @@ public abstract class AbstractBuilder<E, T> {
         rejectionConsumer.accept(rejection);
     }
 
-
-    protected void putInstantFromMillis(final String fieldName, final long millis, final Consumer<Instant> setter) {
-        final Instant instant;
-
-        instant = Instant.ofEpochMilli(millis);
-        put(fieldName, instant, setter);
+    protected <V, T> Consumer<V> solve(final String fieldName, final Consumer<T> setter,
+                                       final Flow<V, T> solver) {
+        return x -> solve(fieldName, x, setter, solver);
     }
 
-    protected void putLocalDate(final String fieldName, final String date, final Consumer<LocalDate> setter) {
-        final LocalDate localDate;
-
-        try {
-            localDate = LocalDate.parse(date);
-            put(fieldName, localDate, setter);
-        } catch(DateTimeParseException exception) {
-            reject(fieldName, date, exception);
+    protected <V, T> void solve(final String fieldName, final V value,
+                                final Consumer<T> setter, final Flow<V, T> solver) {
+        if(solver == null || value == null) {
+            put(fieldName, null, setter);
+            return;
         }
-    }
-
-    protected void putLocalDateTime(final String fieldName, final String dateTime,
-                                    final Consumer<LocalDateTime> setter) {
-        final LocalDateTime localDateTime;
-
         try {
-            localDateTime = LocalDateTime.parse(dateTime);
-            put(fieldName, localDateTime, setter);
-        } catch(DateTimeParseException exception) {
-            reject(fieldName, dateTime, exception);
+            solver.flows(value, put(fieldName, setter));
+        } catch(RuntimeException exception) {
+            reject(fieldName, value, exception);
         }
     }
 
