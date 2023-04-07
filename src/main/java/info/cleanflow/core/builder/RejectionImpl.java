@@ -42,9 +42,16 @@ class RejectionImpl implements Rejection {
 
     @Override
     public <T> Optional<T> optValue(Class<T> valueClass) {
+        requireNonNull(valueClass, "The class is a mandatory argument");
         return Optional.ofNullable(value)
                 .filter(valueClass::isInstance)
                 .map(valueClass::cast);
+    }
+
+    @Override
+    public String toString() {
+        return String.format("Rejected value [%s] in field '%s' with message '%s'",
+                getValueString(), field, getMessage());
     }
 
 }

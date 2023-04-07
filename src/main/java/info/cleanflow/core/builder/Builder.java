@@ -14,9 +14,9 @@ import static org.slf4j.LoggerFactory.getLogger;
  * @param <S> incoming traveler type
  * @param <E> entity type
  */
-public abstract class AbstractBuilder<S, E> {
+public abstract class Builder<S, E> {
 
-    private static final Logger LOG = getLogger(AbstractBuilder.class);
+    private static final Logger LOG = getLogger(Builder.class);
 
     private static final String PREFIX_PATTERN = "%s.%s";
 
@@ -30,24 +30,24 @@ public abstract class AbstractBuilder<S, E> {
 
     private int rejections;
 
-    public AbstractBuilder<S, E> putEntitySupplier(Supplier<E> entitySupplier) {
+    public Builder<S, E> putEntitySupplier(Supplier<E> entitySupplier) {
         this.entitySupplier = requireNonNull(entitySupplier, "The entity supplier is mandatory");
         return this;
     }
 
-    public AbstractBuilder<S, E> putRejectionConsumer(Consumer<Rejection> rejectionConsumer) {
+    public Builder<S, E> putRejectionConsumer(Consumer<Rejection> rejectionConsumer) {
         this.rejectionConsumer = rejectionConsumer;
         return this;
     }
 
-    public AbstractBuilder<S, E> putSource(S source) {
+    public Builder<S, E> putSource(S source) {
         this.source = source;
         return this;
     }
 
-    public AbstractBuilder<S, E> putPrefix(String prefix) {
-        if(prefix.isBlank()) {
-            LOG.warn("Not assigned prefix");
+    public Builder<S, E> putPrefix(String prefix) {
+        if(prefix == null || prefix.isBlank()) {
+            LOG.debug("Not assigned prefix");
             return this;
         }
         this.prefix = prefix;
@@ -78,11 +78,11 @@ public abstract class AbstractBuilder<S, E> {
      */
     protected abstract void assemble(S source, E entity);
 
-    protected <V> Consumer<V> put(final String fieldName, final Consumer<V> setter) {
-        return x -> put(fieldName, x, setter);
+    protected <V> Consumer<V> transfer(final String fieldName, final Consumer<V> setter) {
+        return x -> transfer(fieldName, x, setter);
     }
 
-    protected <V> void put(final String fieldName, final V value, final Consumer<V> setter) {
+    protected <V> void transfer(final String fieldName, final V value, final Consumer<V> setter) {
         requireNonNull(fieldName, "Field name parameter is mandatory");
         requireNonNull(setter, "Setter parameter is mandatory");
         try {
@@ -98,12 +98,12 @@ public abstract class AbstractBuilder<S, E> {
         final String prefixedName;
         final Rejection rejection;
 
-        prefixedName = doPrefix(fieldName);
+        prefixedName = applyPrefix(fieldName);
         rejection = new RejectionImpl(prefixedName, value, exception);
         sendRejection(rejection);
     }
 
-    protected String doPrefix(String fieldName) {
+    protected String applyPrefix(String fieldName) {
         if(prefix == null) {
             return fieldName;
         }
@@ -114,25 +114,28 @@ public abstract class AbstractBuilder<S, E> {
         requireNonNull(rejection, "Parameter rejection is mandatory");
         rejections++;
         if(rejectionConsumer == null) {
-            LOG.error("Not published rejection: {}", rejection);
+            LOG.warn("Not published rejection: {}", rejection);
             return;
         }
         rejectionConsumer.accept(rejection);
     }
 
-    protected <V, T> Consumer<V> solve(final String fieldName, final Consumer<T> setter,
-                                       final Flow<V, T> solver) {
-        return x -> solve(fieldName, x, setter, solver);
+    protected <V, T> Consumer<V> transform(final String fieldName,
+                                           final Consumer<T> setter,
+                                           final Flow<V, T> solver) {
+        return x -> transform(fieldName, x, setter, solver);
     }
 
-    protected <V, T> void solve(final String fieldName, final V value,
-                                final Consumer<T> setter, final Flow<V, T> solver) {
+    protected <V, T> void transform(final String fieldName,
+                                    final V value,
+                                    final Consumer<T> setter,
+                                    final Flow<V, T> solver) {
         if(solver == null || value == null) {
-            put(fieldName, null, setter);
+            transfer(fieldName, null, setter);
             return;
         }
         try {
-            solver.flows(value, put(fieldName, setter));
+            solver.flows(value, transfer(fieldName, setter));
         } catch(RuntimeException exception) {
             reject(fieldName, value, exception);
         }
