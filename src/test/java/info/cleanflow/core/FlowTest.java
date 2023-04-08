@@ -29,6 +29,29 @@ class FlowTest {
         assertEquals(1, counter.get());
     }
 
+    @Test
+    void next() {
+        final Object firstValue;
+        final AtomicInteger counter;
+        final Consumer<String> finalConsumer;
+
+        firstValue = 1000L;
+        counter = new AtomicInteger();
+        finalConsumer = s -> {
+            counter.getAndIncrement();
+            assertEquals("*1000*", s);
+        };
+        mock.flows(firstValue, Flow.next(this::surround, finalConsumer));
+        assertEquals(1, counter.get());
+    }
+
+    void surround(String secondValue, Consumer<String> finalConsumer) {
+        final String thirdValue;
+
+        thirdValue = String.format("*%s*", secondValue);
+        finalConsumer.accept(thirdValue);
+    }
+
     static class FlowMock implements Flow<Object, String> {
 
         @Override

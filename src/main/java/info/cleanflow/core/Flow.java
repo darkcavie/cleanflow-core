@@ -12,4 +12,8 @@ public interface Flow<S, T> extends BiConsumer<S, Consumer<T>> {
         flows(source, targetConsumer);
     }
 
+    static <S, T> Consumer<S> next(Flow<S, T> flow,  Consumer<T> nextConsumer) {
+        return value -> flow.flows(value, nextConsumer);
+    }
+
 }
