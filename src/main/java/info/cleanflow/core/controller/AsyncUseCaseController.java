@@ -23,10 +23,11 @@ public abstract class AsyncUseCaseController {
         return Executors.newCachedThreadPool(threadFactory);
     }
 
-    public <S, T> Future<Void> start(final Flow<S, T> flow, final S value, final Consumer<T> consumer) {
-        nonNullArgument(flow, "Initial function");
-        nonNullArgument(consumer, "Final consumer");
-        return executorService.submit(() -> flow.flows(value, consumer), null);
+    public <S, T> Future<Void> start(final Flow<S, T> flow,
+                                     final S value,
+                                     final Consumer<T> consumer) {
+        final var startFlow = new StartFlow<>(flow, value, consumer);
+        return executorService.submit(startFlow, null);
     }
 
 }
