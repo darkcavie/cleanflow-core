@@ -12,7 +12,8 @@ public class InvalidBuiltException extends RuntimeException {
 
     private final Collection<Rejection> rejectionCollection;
 
-    InvalidBuiltException(final String entityName, Collection<Rejection> rejectionCollection) {
+    protected InvalidBuiltException(final String entityName,
+                                    final Collection<Rejection> rejectionCollection) {
         super(String.format("Invalid built of %s with %d rejections",
                 nonNullArgument(entityName, "Entity name"),
                 nonNullArgument(rejectionCollection, "rejection collection").size()));
