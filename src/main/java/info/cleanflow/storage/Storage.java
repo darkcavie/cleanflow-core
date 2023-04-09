@@ -1,6 +1,6 @@
 package info.cleanflow.storage;
 
-public interface Storage<K extends Comparable<K>, T extends K> extends ReadStorage<K, T> {
+public interface Storage<K, T extends K> extends ReadStorage<K, T> {
 
     void deleteByKey(K key);
 

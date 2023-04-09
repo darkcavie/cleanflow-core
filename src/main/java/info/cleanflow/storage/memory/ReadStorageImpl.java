@@ -9,7 +9,8 @@ import java.util.function.Consumer;
 
 import static info.cleanflow.Objects.nonNullArgument;
 
-public class ReadStorageImpl<K, T extends K> implements ReadStorage<K, T> {
+public class ReadStorageImpl<K extends Comparable<K>, T extends K>
+        implements ReadStorage<K, T> {
 
     protected final Map<K, T> map;
 
