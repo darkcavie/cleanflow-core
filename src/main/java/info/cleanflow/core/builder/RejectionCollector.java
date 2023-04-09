@@ -1,11 +1,13 @@
 package info.cleanflow.core.builder;
 
+import info.cleanflow.Rejection;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 
-import static info.cleanflow.core.Objects.nonNullArgument;
+import static info.cleanflow.Objects.nonNullArgument;
 
 public class RejectionCollector implements Consumer<Rejection> {
 

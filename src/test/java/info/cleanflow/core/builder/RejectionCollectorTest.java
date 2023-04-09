@@ -16,7 +16,7 @@ class RejectionCollectorTest {
 
     @Test
     void accept() {
-        final var rejectionMock = new RejectionMock();
+        final var rejectionMock = new FieldRejectionMock();
         assertDoesNotThrow(() -> impl.accept(rejectionMock));
     }
 
@@ -27,7 +27,7 @@ class RejectionCollectorTest {
 
     @Test
     void checkRejectionsThrows() {
-        final var rejectionMock = new RejectionMock();
+        final var rejectionMock = new FieldRejectionMock();
         impl.accept(rejectionMock);
         assertThrows(InvalidBuiltException.class, impl::checkRejections);
     }

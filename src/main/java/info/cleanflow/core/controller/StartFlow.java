@@ -1,12 +1,12 @@
 package info.cleanflow.core.controller;
 
-import info.cleanflow.core.Flow;
+import info.cleanflow.Flow;
 
 import java.util.function.Consumer;
 
-import static info.cleanflow.core.Objects.nonNullArgument;
+import static info.cleanflow.Objects.nonNullArgument;
 
-public class StartFlow<S, T> implements Runnable {
+class StartFlow<S, T> implements Runnable {
 
     private final Flow<S, T> flow;
 
@@ -14,7 +14,7 @@ public class StartFlow<S, T> implements Runnable {
 
     private final Consumer<T> consumer;
 
-    public StartFlow(final Flow<S, T> flow, final S value, final Consumer<T> consumer) {
+    StartFlow(final Flow<S, T> flow, final S value, final Consumer<T> consumer) {
         this.flow = nonNullArgument(flow, "Initial function");
         this.value = value;
         this.consumer = nonNullArgument(consumer, "Final consumer");

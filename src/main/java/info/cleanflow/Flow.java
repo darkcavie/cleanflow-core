@@ -1,4 +1,4 @@
-package info.cleanflow.core;
+package info.cleanflow;
 
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;

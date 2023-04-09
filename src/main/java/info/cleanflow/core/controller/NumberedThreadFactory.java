@@ -3,13 +3,13 @@ package info.cleanflow.core.controller;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static info.cleanflow.core.Objects.nonNullArgument;
+import static info.cleanflow.Objects.nonNullArgument;
 
 public class NumberedThreadFactory implements ThreadFactory {
 
-    static final int MAX_NUMBER = 100;
+    public static final int MAX_NUMBER = 100;
 
-    static final String NAME_FORMAT = "%s_%02d";
+    public static final String NAME_FORMAT = "%s_%02d";
 
     private final String name;
 
@@ -25,11 +25,12 @@ public class NumberedThreadFactory implements ThreadFactory {
         return new Thread(r, getName());
     }
 
-    String getName() {
-        return String.format(NAME_FORMAT, name, counter.getAndUpdate(this::updater));
+    protected String getName() {
+        final int number = counter.getAndUpdate(this::updater);
+        return String.format(NAME_FORMAT, name, number);
     }
 
-    int updater(final int i) {
+    protected int updater(final int i) {
         if(i >= MAX_NUMBER) {
             return 0;
         }

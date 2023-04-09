@@ -6,13 +6,13 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-class RejectionImplTest {
+class FieldRejectionImplTest {
 
-    private RejectionImpl impl;
+    private FieldRejectionImpl impl;
 
     @BeforeEach
     void setUp() {
-        impl = new RejectionImpl("mockField", "certainValue", new RuntimeException("mock exception"));
+        impl = new FieldRejectionImpl("mockField", "certainValue", new RuntimeException("mock exception"));
     }
 
     @Test

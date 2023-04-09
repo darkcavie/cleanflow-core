@@ -1,10 +1,13 @@
 package info.cleanflow.core.builder;
 
+import info.cleanflow.FieldRejection;
+
 import java.util.Optional;
 
+import static info.cleanflow.Objects.nonNullArgument;
 import static java.util.Objects.requireNonNull;
 
-class RejectionImpl implements Rejection {
+class FieldRejectionImpl implements FieldRejection {
 
     private final String field;
 
@@ -12,10 +15,10 @@ class RejectionImpl implements Rejection {
 
     private final Throwable exception;
 
-    RejectionImpl(final String field, final Object value, final Throwable exception) {
-        this.field = requireNonNull(field, "The field is mandatory for rejection");
+    FieldRejectionImpl(final String field, final Object value, final Throwable exception) {
+        this.field = nonNullArgument(field, "field in rejection");
         this.value = value;
-        this.exception = requireNonNull(exception, "The exception is mandatory for rejection");
+        this.exception = nonNullArgument(exception, "exception in rejection");
     }
 
     @Override

@@ -1,5 +1,6 @@
 package info.cleanflow.core.builder;
 
+import info.cleanflow.FieldRejection;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,7 +24,7 @@ class BuilderTest {
 
     private BuilderMock mock;
 
-    private List<Rejection> rejectionList;
+    private List<FieldRejection> rejectionList;
 
     @BeforeEach
     void setup() {
@@ -89,7 +90,7 @@ class BuilderTest {
 
     @Test
     void buildWithRejection() {
-        final Rejection rejection;
+        final FieldRejection rejection;
 
         mock.putSource(new Object())
                 .putEntitySupplier(Object::new)
@@ -108,7 +109,7 @@ class BuilderTest {
 
     @Test
     void transferFails() {
-        final Rejection rejection;
+        final FieldRejection rejection;
 
         mock.putRejectionConsumer(rejectionList::add);
         mock.transfer("otherField", 1L, l -> {
@@ -125,9 +126,9 @@ class BuilderTest {
 
     @Test
     void sendRejectionWithoutConsumer() {
-        final Rejection rejection;
+        final FieldRejection rejection;
 
-        rejection = new RejectionImpl("oneField", LocalDateTime.now(),
+        rejection = new FieldRejectionImpl("oneField", LocalDateTime.now(),
                 new IllegalStateException("too late"));
         assertDoesNotThrow(() -> mock.sendRejection(rejection));
     }

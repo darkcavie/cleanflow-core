@@ -1,13 +1,14 @@
 package info.cleanflow.core.builder;
 
-import info.cleanflow.core.Flow;
+import info.cleanflow.FieldRejection;
+import info.cleanflow.Flow;
 import org.slf4j.Logger;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import static info.cleanflow.core.Objects.nonNullArgument;
-import static info.cleanflow.core.Objects.nonNullMember;
+import static info.cleanflow.Objects.nonNullArgument;
+import static info.cleanflow.Objects.nonNullMember;
 import static org.slf4j.LoggerFactory.getLogger;
 
 /**
@@ -21,7 +22,7 @@ public abstract class Builder<S, E> {
 
     private static final String PREFIX_PATTERN = "%s.%s";
 
-    private Consumer<Rejection> rejectionConsumer;
+    private Consumer<FieldRejection> rejectionConsumer;
 
     private Supplier<E> entitySupplier;
 
@@ -36,7 +37,7 @@ public abstract class Builder<S, E> {
         return this;
     }
 
-    public Builder<S, E> putRejectionConsumer(Consumer<Rejection> rejectionConsumer) {
+    public Builder<S, E> putRejectionConsumer(Consumer<FieldRejection> rejectionConsumer) {
         this.rejectionConsumer = rejectionConsumer;
         return this;
     }
@@ -97,10 +98,10 @@ public abstract class Builder<S, E> {
 
     protected void reject(final String fieldName, final Object value, final Throwable exception) {
         final String prefixedName;
-        final Rejection rejection;
+        final FieldRejection rejection;
 
         prefixedName = applyPrefix(fieldName);
-        rejection = new RejectionImpl(prefixedName, value, exception);
+        rejection = new FieldRejectionImpl(prefixedName, value, exception);
         sendRejection(rejection);
     }
 
@@ -111,7 +112,7 @@ public abstract class Builder<S, E> {
         return String.format(PREFIX_PATTERN, prefix, fieldName);
     }
 
-    protected void sendRejection(Rejection rejection) {
+    protected void sendRejection(FieldRejection rejection) {
         nonNullArgument(rejection, "Parameter rejection is mandatory");
         rejections++;
         if(rejectionConsumer == null) {

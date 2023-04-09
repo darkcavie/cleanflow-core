@@ -1,9 +1,11 @@
 package info.cleanflow.core.builder;
 
+import info.cleanflow.Rejection;
+
 import java.util.Collection;
 import java.util.stream.Stream;
 
-import static info.cleanflow.core.Objects.nonNullArgument;
+import static info.cleanflow.Objects.nonNullArgument;
 
 /**
  * It represents an unsuccessful build of an entity. It contains the field rejections.

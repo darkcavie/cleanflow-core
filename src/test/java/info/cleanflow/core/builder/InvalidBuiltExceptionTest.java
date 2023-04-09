@@ -13,7 +13,7 @@ class InvalidBuiltExceptionTest {
 
     @BeforeEach
     void setUp() {
-        exception = new InvalidBuiltException("mockEntity", Collections.singleton(new RejectionMock()));
+        exception = new InvalidBuiltException("mockEntity", Collections.singleton(new FieldRejectionMock()));
     }
 
     @Test

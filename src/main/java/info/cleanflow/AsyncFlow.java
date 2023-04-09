@@ -1,4 +1,4 @@
-package info.cleanflow.core;
+package info.cleanflow;
 
 import java.util.concurrent.Future;
 import java.util.function.Consumer;

@@ -1,6 +1,6 @@
 package info.cleanflow.core.controller;
 
-import info.cleanflow.core.Flow;
+import info.cleanflow.Flow;
 import org.slf4j.Logger;
 
 import java.util.concurrent.ExecutorService;
@@ -8,7 +8,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
 
-import static info.cleanflow.core.Objects.nonNullArgument;
+import static info.cleanflow.Objects.nonNullArgument;
 import static org.slf4j.LoggerFactory.getLogger;
 
 public abstract class AsyncUseCaseController {

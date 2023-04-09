@@ -1,8 +1,10 @@
 package info.cleanflow.core.builder;
 
+import info.cleanflow.FieldRejection;
+
 import java.util.Optional;
 
-class RejectionMock implements Rejection {
+class FieldRejectionMock implements FieldRejection {
 
     @Override
     public String getField() {

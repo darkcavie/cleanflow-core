@@ -1,8 +1,8 @@
-package info.cleanflow.core;
+package info.cleanflow;
 
 import java.util.function.Consumer;
 
-import static info.cleanflow.core.Objects.nonNullArgument;
+import static info.cleanflow.Objects.nonNullArgument;
 
 class Next<S, T> implements Consumer<S> {
 

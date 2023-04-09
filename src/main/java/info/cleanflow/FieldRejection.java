@@ -1,14 +1,10 @@
-package info.cleanflow.core.builder;
+package info.cleanflow;
 
 import java.util.Optional;
 
-public interface Rejection {
+public interface FieldRejection extends Rejection {
 
     String getField();
-
-    Throwable getException();
-
-    String getMessage();
 
     String getValueString();
 
