@@ -38,7 +38,7 @@ class BuilderTest {
 
     @Test
     void putEntitySupplierNullFails() {
-        assertThrows(NullPointerException.class, () -> mock.putEntitySupplier(null));
+        assertThrows(IllegalArgumentException.class, () -> mock.putEntitySupplier(null));
     }
 
     @Test

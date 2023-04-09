@@ -6,7 +6,8 @@ import org.slf4j.Logger;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import static java.util.Objects.requireNonNull;
+import static info.cleanflow.core.Objects.nonNullArgument;
+import static info.cleanflow.core.Objects.nonNullMember;
 import static org.slf4j.LoggerFactory.getLogger;
 
 /**
@@ -31,7 +32,7 @@ public abstract class Builder<S, E> {
     private int rejections;
 
     public Builder<S, E> putEntitySupplier(Supplier<E> entitySupplier) {
-        this.entitySupplier = requireNonNull(entitySupplier, "The entity supplier is mandatory");
+        this.entitySupplier = nonNullArgument(entitySupplier, "entity supplier");
         return this;
     }
 
@@ -58,7 +59,7 @@ public abstract class Builder<S, E> {
         final E entity;
 
         check();
-        requireNonNull(entityConsumer, "The entity consumer is a mandatory parameter for build");
+        nonNullArgument(entityConsumer, "The entity consumer is a mandatory parameter for build");
         entity = entitySupplier.get();
         assemble(source, entity);
         if(rejections == 0) {
@@ -67,8 +68,8 @@ public abstract class Builder<S, E> {
     }
 
     protected void check() {
-        requireNonNull(source, "The source is mandatory to build");
-        requireNonNull(entitySupplier, "The entity supplier is mandatory to build");
+        nonNullMember(source, "source");
+        nonNullMember(entitySupplier, "entity supplier");
     }
 
     /**
@@ -83,8 +84,8 @@ public abstract class Builder<S, E> {
     }
 
     protected <V> void transfer(final String fieldName, final V value, final Consumer<V> setter) {
-        requireNonNull(fieldName, "Field name parameter is mandatory");
-        requireNonNull(setter, "Setter parameter is mandatory");
+        nonNullArgument(fieldName, "Field name parameter is mandatory");
+        nonNullArgument(setter, "Setter parameter is mandatory");
         try {
             setter.accept(value);
         } catch(RuntimeException rex) {
@@ -111,7 +112,7 @@ public abstract class Builder<S, E> {
     }
 
     protected void sendRejection(Rejection rejection) {
-        requireNonNull(rejection, "Parameter rejection is mandatory");
+        nonNullArgument(rejection, "Parameter rejection is mandatory");
         rejections++;
         if(rejectionConsumer == null) {
             LOG.warn("Not published rejection: {}", rejection);
