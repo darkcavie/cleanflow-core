@@ -54,7 +54,7 @@ public abstract class AsyncUseCaseController {
                 throw runtimeException;
             }
             final var moreTimes = remindTries - 1;
-            LOG.info("Try again {} times more", moreTimes);
+            LOG.info("Try again {} more times", moreTimes);
             retry(flow, value, consumer, moreTimes);
         }
     }
