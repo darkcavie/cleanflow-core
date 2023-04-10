@@ -71,6 +71,9 @@ class AsyncUseCaseControllerTest {
             super("mock");
         }
 
+        @Override
+        public void checkDependencies() {}
+
     }
 
 }

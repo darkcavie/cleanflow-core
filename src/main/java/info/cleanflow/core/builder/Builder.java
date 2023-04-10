@@ -2,6 +2,7 @@ package info.cleanflow.core.builder;
 
 import info.cleanflow.FieldRejection;
 import info.cleanflow.Flow;
+import info.cleanflow.Rejection;
 import org.slf4j.Logger;
 
 import java.util.function.Consumer;
@@ -22,7 +23,7 @@ public abstract class Builder<S, E> {
 
     private static final String PREFIX_PATTERN = "%s.%s";
 
-    private Consumer<FieldRejection> rejectionConsumer;
+    private Consumer<Rejection> rejectionConsumer;
 
     private Supplier<E> entitySupplier;
 
@@ -37,7 +38,7 @@ public abstract class Builder<S, E> {
         return this;
     }
 
-    public Builder<S, E> putRejectionConsumer(Consumer<FieldRejection> rejectionConsumer) {
+    public Builder<S, E> putRejectionConsumer(Consumer<Rejection> rejectionConsumer) {
         this.rejectionConsumer = rejectionConsumer;
         return this;
     }

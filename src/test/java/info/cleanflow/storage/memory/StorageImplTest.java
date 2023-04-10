@@ -1,5 +1,8 @@
 package info.cleanflow.storage.memory;
 
+import info.cleanflow.example.sources.PartyKey;
+import info.cleanflow.example.sources.PartySource;
+import info.cleanflow.example.sources.PartySourceMock;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -7,47 +10,47 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class StorageImplTest {
 
-    private StorageImpl<KeyMock, SourceMock> storage;
+    private StorageImpl<PartyKey, PartySource> storage;
 
-    private SourceImplMock source;
+    private PartySourceMock partySourceMock;
 
     private int received;
 
     @BeforeEach
     void setUp() {
         storage = new StorageImpl<>();
-        source = null;
+        partySourceMock = new PartySourceMock();
         received = 0;
     }
 
     @Test
     void deleteByKey() {
-        source = new SourceImplMock("worker", 21);
-        assertDoesNotThrow(() -> storage.deleteByKey(source));
+        final var key = partySourceMock.partyKey("worker");
+        assertDoesNotThrow(() -> storage.deleteByKey(key));
     }
 
     @Test
     void upsertNotPresent() {
-        source = new SourceImplMock("student", 12);
+        final var source = partySourceMock.partySource("student", "2012-01-31", null);
         storage.upsert(source);
         storage.findByKey(source, x -> {
             received++;
             assertNotNull(x);
-            assertEquals(12, x.getAge());
+            assertEquals("2012-01-31", x.getStart());
         });
         assertEquals(1, received);
     }
 
     @Test
     void upsertWithPresent() {
-        source = new SourceImplMock("other", 10);
+        var source = partySourceMock.partySource("other", "2000-12-01", null);
         storage.insert(source);
-        source = new SourceImplMock("other", 13);
+        source = partySourceMock.partySource("other", "2000-12-01", "2023-01-12");
         storage.upsert(source);
         storage.findByKey(source, x -> {
             received++;
             assertNotNull(x);
-            assertEquals(13, x.getAge());
+            assertEquals("2023-01-12", x.optEnd().orElse(null));
         });
         assertEquals(1, received);
     }

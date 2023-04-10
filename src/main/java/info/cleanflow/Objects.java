@@ -12,12 +12,11 @@ public interface Objects {
         return argument;
     }
 
-    static <T> T nonNullMember(T member, String memberName) {
+    static <T> void nonNullMember(T member, String memberName) {
         if(member == null) {
             var message = String.format("The member %s is mandatory in this point", memberName);
             throw new IllegalStateException(message);
         }
-        return member;
     }
 
     static <T extends Comparable<T>> boolean equalsByComparable(Class<T> castClass, T me, Object other) {

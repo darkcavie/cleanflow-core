@@ -1,6 +1,7 @@
 package info.cleanflow.core.builder;
 
 import info.cleanflow.FieldRejection;
+import info.cleanflow.Rejection;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,7 +25,7 @@ class BuilderTest {
 
     private BuilderMock mock;
 
-    private List<FieldRejection> rejectionList;
+    private List<Rejection> rejectionList;
 
     @BeforeEach
     void setup() {
@@ -90,7 +91,7 @@ class BuilderTest {
 
     @Test
     void buildWithRejection() {
-        final FieldRejection rejection;
+        final Rejection rejection;
 
         mock.putSource(new Object())
                 .putEntitySupplier(Object::new)
@@ -101,15 +102,13 @@ class BuilderTest {
         assertEquals(1, rejectionList.size());
         rejection = rejectionList.get(0);
         assertNotNull(rejection);
-        assertEquals("prefix.field", rejection.getField());
-        assertEquals("value", rejection.getValueString());
         assertEquals("message", rejection.getMessage());
         assertInstanceOf(IllegalArgumentException.class, rejection.getException());
     }
 
     @Test
     void transferFails() {
-        final FieldRejection rejection;
+        final Rejection rejection;
 
         mock.putRejectionConsumer(rejectionList::add);
         mock.transfer("otherField", 1L, l -> {
@@ -117,10 +116,7 @@ class BuilderTest {
         });
         rejection = rejectionList.get(0);
         assertNotNull(rejection);
-        assertEquals("otherField", rejection.getField());
-        assertEquals("1", rejection.getValueString());
         assertEquals("forcedStateException", rejection.getMessage());
-        assertEquals(1L, rejection.optValue(Long.class).orElse(0L));
         assertInstanceOf(IllegalStateException.class, rejection.getException());
     }
 
