@@ -3,14 +3,12 @@ package info.cleanflow.core.controller;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 class AsyncUseCaseControllerTest {
 
@@ -63,6 +61,60 @@ class AsyncUseCaseControllerTest {
     void flowAlwaysFails(Object source, Consumer<Object> consumer) {
         final var message = String.format("Fail number %d", ++runCounter);
         throw new IllegalStateException(message);
+    }
+
+    @Test
+    void setTimeOut() {
+        assertDoesNotThrow(() -> impl.setTimeOut(0));
+    }
+
+    @Test
+    void setTimeOutNegativeFails() {
+        assertThrows(IllegalArgumentException.class, () -> impl.setTimeOut(-1));
+    }
+
+    @Test
+    void setTimeOutUnitNullFails() {
+        assertThrows(IllegalArgumentException.class, () -> impl.setTimeOutUnit(null));
+    }
+
+    @Test
+    void setTimeOutUnit() {
+        assertDoesNotThrow(() -> impl.setTimeOutUnit(TimeUnit.MINUTES));
+    }
+
+    @Test
+    void asyncRetry() {
+        impl.asyncRetry(this::asyncAlwaysWork, "x", c -> {
+            successCounter++;
+            assertNotNull(c);
+        }, "Not used error");
+        assertEquals(1, successCounter);
+        assertEquals(1, runCounter);
+    }
+
+    Future<Void> asyncAlwaysWork(String request, Consumer<Object> responseConsumer) {
+        runCounter++;
+        assertEquals("x", request);
+        responseConsumer.accept(new Object());
+        return CompletableFuture.completedFuture(null);
+    }
+
+    @Test
+    void asyncRetryFails() {
+        assertThrows(RuntimeException.class,
+                () -> impl.asyncRetry(this::asyncAlwaysFails, "x", c -> successCounter++, "async"));
+        assertEquals(0, successCounter);
+        assertEquals(3, runCounter);
+    }
+
+    Future<Void> asyncAlwaysFails(String request, Consumer<Object> responseConsumer) {
+        final CompletableFuture<Void> future;
+
+        runCounter++;
+        future = new CompletableFuture<>();
+        future.completeExceptionally(new RuntimeException("It never works"));
+        return future;
     }
 
     static class AsyncUseCaseControllerMock extends AsyncUseCaseController {
