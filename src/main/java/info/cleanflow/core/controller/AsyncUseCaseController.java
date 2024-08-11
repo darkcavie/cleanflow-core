@@ -4,7 +4,6 @@ import info.cleanflow.AsyncFlow;
 import info.cleanflow.Flow;
 import org.slf4j.Logger;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -106,24 +105,7 @@ public abstract class AsyncUseCaseController {
 
     protected <X extends RuntimeException> void manageFuture(final Future<Void> future, String message,
             Class<X> exceptionClass) {
-        final String formattedMessage;
-
-        try {
-            tryManageFuture(future, message, exceptionClass);
-        } catch(NoSuchMethodException | InstantiationException | IllegalAccessException |
-                InvocationTargetException noMethodEx) {
-            formattedMessage = String.format("Not valid exception %s because %s",
-                    exceptionClass.getName(), noMethodEx.getMessage());
-            throw new RuntimeException(formattedMessage, noMethodEx);
-        }
-    }
-
-    <X extends RuntimeException> void tryManageFuture(final Future<Void> future, String message,
-            Class<X> exceptionClass) throws NoSuchMethodException, InstantiationException, IllegalAccessException,
-            InvocationTargetException {
-        final String formattedMessage;
         final Throwable cause;
-        final X exception;
 
         try {
             if(timeOut == 0) {
@@ -133,24 +115,34 @@ public abstract class AsyncUseCaseController {
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            formattedMessage = String.format("%s: %s", message, e.getMessage());
-            exception = exceptionClass.getConstructor(String.class)
-                    .newInstance(formattedMessage);
-            throw exception;
+            throw buildException(message, e.getMessage(), exceptionClass, null);
         } catch (ExecutionException e) {
             cause = e.getCause();
             if(exceptionClass.isInstance(cause)) {
                 throw exceptionClass.cast(cause);
             }
-            formattedMessage = String.format("%s: %s", message, cause.getMessage());
-            exception = exceptionClass.getConstructor(String.class, Throwable.class)
-                    .newInstance(formattedMessage, cause);
-            throw exception;
+            throw buildException(message, cause.getMessage(), exceptionClass, cause);
         } catch (TimeoutException timeOutEx) {
-            formattedMessage = String.format("Timeout: %s", message);
-            exception = exceptionClass.getConstructor(String.class, Throwable.class)
-                    .newInstance(formattedMessage, timeOutEx);
-            throw exception;
+            throw buildException("Timeout", message, exceptionClass, timeOutEx);
+        }
+    }
+
+    <X extends RuntimeException> X buildException(final String message, final String subMessage,
+              final Class<X> exceptionClass, final Throwable cause) {
+        final String formattedMessage;
+
+        formattedMessage = String.format("%s: %s", message, subMessage);
+        try {
+            if (cause == null) {
+                return exceptionClass.getConstructor(String.class)
+                        .newInstance(formattedMessage);
+            }
+            return exceptionClass.getConstructor(String.class, Throwable.class)
+                    .newInstance(formattedMessage, cause);
+        } catch(ReflectiveOperationException roex) {
+            LOG.warn("The class {} does not have a valid constructor, throwing just a RuntimeException",
+                    exceptionClass.getName(), roex);
+            throw new RuntimeException(formattedMessage, cause);
         }
     }
 

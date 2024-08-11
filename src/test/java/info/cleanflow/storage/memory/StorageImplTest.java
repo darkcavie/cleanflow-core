@@ -55,4 +55,10 @@ class StorageImplTest {
         assertEquals(1, received);
     }
 
+    @Test
+    void updateNothing() {
+        var source = partySourceMock.partySource("other", "2000-12-01", null);
+        assertDoesNotThrow(() ->storage.update(source));
+    }
+
 }

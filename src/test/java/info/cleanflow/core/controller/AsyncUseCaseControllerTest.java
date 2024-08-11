@@ -117,6 +117,69 @@ class AsyncUseCaseControllerTest {
         return future;
     }
 
+    @Test
+    void manageFutureInterrupted() {
+        final Future<Void> interruptedFuture;
+        final MockException mockException;
+
+        interruptedFuture = interruptedFuture();
+        mockException = assertThrows(MockException.class, () -> impl.manageFuture(interruptedFuture,
+                "I want this message", MockException.class));
+        assertEquals("I want this message: Mock interruption", mockException.getMessage());
+    }
+
+    Future<Void> interruptedFuture() {
+        return new CompletableFuture<>() {
+            @Override
+            public Void get() throws InterruptedException {
+                throw new InterruptedException("Mock interruption");
+            }
+        };
+    }
+
+    @Test
+    void manageFutureTimeOut() {
+        final Future<Void> future;
+
+        impl.setTimeOut(200);
+        impl.setTimeOutUnit(TimeUnit.MILLISECONDS);
+        future = impl.start(() -> {
+            try {
+                Thread.sleep(300);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException(e);
+            }
+        });
+        assertThrows(MockException.class, () -> impl.manageFuture(future, "Mock message", MockException.class));
+    }
+
+    @Test
+    void manageFutureWithOtherException() {
+        final CompletableFuture<Void> future;
+        final MockException wrapperException;
+
+        future = CompletableFuture.failedFuture(new NullPointerException("Something is missing"));
+        wrapperException = assertThrows(MockException.class,
+                () -> impl.manageFuture(future, "External message", MockException.class));
+        assertEquals("External message: Something is missing", wrapperException.getMessage());
+        assertTrue(NullPointerException.class.isInstance(wrapperException.getCause()));
+    }
+
+    @Test
+    void buildExceptionIsFine() {
+        final MockException mockException;
+
+        mockException = impl.buildException("message", "subMessage", MockException.class, null);
+        assertNotNull(mockException);
+    }
+
+    @Test
+    void buildExceptionFails() {
+        assertThrows(RuntimeException.class, () -> impl.buildException("message", "subMessage",
+                MuteException.class, null));
+    }
+
     static class AsyncUseCaseControllerMock extends AsyncUseCaseController {
 
         protected AsyncUseCaseControllerMock() {
@@ -125,6 +188,25 @@ class AsyncUseCaseControllerTest {
 
         @Override
         public void checkDependencies() {}
+
+    }
+
+    static class MockException extends RuntimeException {
+
+        public MockException(String message) {
+            super(message);
+        }
+
+        public MockException(String message, Throwable cause) {
+            super(message, cause);
+        }
+
+    }
+
+    static class MuteException extends RuntimeException {
+
+        public MuteException() {
+        }
 
     }
 
