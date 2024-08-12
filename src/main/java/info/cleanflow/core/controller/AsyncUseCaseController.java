@@ -40,7 +40,7 @@ public abstract class AsyncUseCaseController {
 
     public void init() {
         nonNullMember(config, "config");
-    };
+    }
 
     protected <S, T> Future<Void> start(final Flow<S, T> flow, final S value, final Consumer<T> consumer) {
         final var startFlow = new StartFlow<>(flow, value, consumer);
