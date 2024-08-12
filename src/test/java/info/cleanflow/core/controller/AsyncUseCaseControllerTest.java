@@ -55,32 +55,12 @@ class AsyncUseCaseControllerTest {
         objectConsumer = x -> fail("Must not call");
         assertThrows(IllegalStateException.class,
                 () -> impl.retry(this::flowAlwaysFails, value, objectConsumer));
-        assertEquals(AsyncUseCaseController.RETRY_TIMES, runCounter);
+        assertEquals(DefaultCtrlConfig.RETRY_TIMES, runCounter);
     }
 
     void flowAlwaysFails(Object source, Consumer<Object> consumer) {
         final var message = String.format("Fail number %d", ++runCounter);
         throw new IllegalStateException(message);
-    }
-
-    @Test
-    void setTimeOut() {
-        assertDoesNotThrow(() -> impl.setTimeOut(0));
-    }
-
-    @Test
-    void setTimeOutNegativeFails() {
-        assertThrows(IllegalArgumentException.class, () -> impl.setTimeOut(-1));
-    }
-
-    @Test
-    void setTimeOutUnitNullFails() {
-        assertThrows(IllegalArgumentException.class, () -> impl.setTimeOutUnit(null));
-    }
-
-    @Test
-    void setTimeOutUnit() {
-        assertDoesNotThrow(() -> impl.setTimeOutUnit(TimeUnit.MINUTES));
     }
 
     @Test
@@ -141,8 +121,7 @@ class AsyncUseCaseControllerTest {
     void manageFutureTimeOut() {
         final Future<Void> future;
 
-        impl.setTimeOut(200);
-        impl.setTimeOutUnit(TimeUnit.MILLISECONDS);
+        impl.setConfig(ctrlConfig());
         future = impl.start(() -> {
             try {
                 Thread.sleep(300);
@@ -152,6 +131,20 @@ class AsyncUseCaseControllerTest {
             }
         });
         assertThrows(MockException.class, () -> impl.manageFuture(future, "Mock message", MockException.class));
+    }
+
+    CtrlConfig ctrlConfig() {
+        return new DefaultCtrlConfig() {
+            @Override
+            public long getTimeOut() {
+                return 200;
+            }
+
+            @Override
+            public TimeUnit getTimeOutUnit() {
+                return TimeUnit.MILLISECONDS;
+            }
+        };
     }
 
     @Test
@@ -185,9 +178,6 @@ class AsyncUseCaseControllerTest {
         protected AsyncUseCaseControllerMock() {
             super("mock");
         }
-
-        @Override
-        public void checkDependencies() {}
 
     }
 

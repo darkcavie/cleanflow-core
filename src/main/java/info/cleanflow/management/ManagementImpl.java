@@ -43,7 +43,8 @@ public class ManagementImpl<E, K, T extends K>
     }
 
     @Override
-    public void checkDependencies() {
+    public void init() {
+        super.init();
         nonNullMember(storage, "Storage");
         nonNullMember(builderSupplier, "Entity Builder");
         nonNullMember(wrapper, "Wrapper");

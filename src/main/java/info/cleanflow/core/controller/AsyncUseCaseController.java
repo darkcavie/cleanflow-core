@@ -8,30 +8,25 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
 import static info.cleanflow.Objects.nonNullArgument;
+import static info.cleanflow.Objects.nonNullMember;
 import static org.slf4j.LoggerFactory.getLogger;
 
 public abstract class AsyncUseCaseController {
 
     private static final Logger LOG = getLogger(AsyncUseCaseController.class);
 
-    protected static final int RETRY_TIMES = 3;
-
     private final ExecutorService executorService;
 
-    private long timeOut;
-
-    private TimeUnit timeOutUnit;
+    private CtrlConfig config;
 
     protected AsyncUseCaseController(String threadName) {
         nonNullArgument(threadName, "Thread name");
         this.executorService = makeExecutorService(threadName);
-        timeOut = 0;
-        timeOutUnit = TimeUnit.SECONDS;
+        config = new DefaultCtrlConfig();
     }
 
     protected ExecutorService makeExecutorService(final String threadName) {
@@ -39,18 +34,13 @@ public abstract class AsyncUseCaseController {
         return Executors.newCachedThreadPool(threadFactory);
     }
 
-    public abstract void checkDependencies();
-
-    public void setTimeOut(long timeOut) {
-        if(timeOut < 0) {
-            throw new IllegalArgumentException("Time out must be equal or greater than zero");
-        }
-        this.timeOut = timeOut;
+    public void setConfig(CtrlConfig config) {
+        this.config = config;
     }
 
-    public void setTimeOutUnit(TimeUnit timeOutUnit) {
-        this.timeOutUnit = nonNullArgument(timeOutUnit, "Time out unit");
-    }
+    public void init() {
+        nonNullMember(config, "config");
+    };
 
     protected <S, T> Future<Void> start(final Flow<S, T> flow, final S value, final Consumer<T> consumer) {
         final var startFlow = new StartFlow<>(flow, value, consumer);
@@ -62,7 +52,7 @@ public abstract class AsyncUseCaseController {
     }
 
     protected <S, T> void retry(final Flow<S, T> flow, final S value,  final Consumer<T> consumer) {
-        retry(flow, value, consumer, RETRY_TIMES);
+        retry(flow, value, consumer, config.getRetryTimes());
     }
 
     protected <S, T> void retry(final Flow<S, T> flow, final S value,  final Consumer<T> consumer,
@@ -82,7 +72,7 @@ public abstract class AsyncUseCaseController {
 
     protected <S, T> void asyncRetry(final AsyncFlow<S, T> flow, final S value, final Consumer<T> consumer,
              final String errorMessage) {
-        asyncRetry(flow, value, consumer, errorMessage, RETRY_TIMES);
+        asyncRetry(flow, value, consumer, errorMessage, config.getRetryTimes());
     }
 
     protected <S, T> void asyncRetry(final AsyncFlow<S, T> flow, final S value, final Consumer<T> consumer,
@@ -108,10 +98,10 @@ public abstract class AsyncUseCaseController {
         final Throwable cause;
 
         try {
-            if(timeOut == 0) {
+            if(config.getTimeOut() == 0) {
                 future.get();
             } else {
-                future.get(timeOut, timeOutUnit);
+                future.get(config.getTimeOut(), config.getTimeOutUnit());
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
